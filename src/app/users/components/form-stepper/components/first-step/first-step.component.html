@@ -1,0 +1,104 @@
+<form [formGroup]="formGroup" class="first-step step">
+
+  <mat-form-field>
+    <input
+      formControlName="firstname"
+      matInput
+      type="text"
+      name="firstname"
+      placeholder="First name"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('firstname')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid name. Name can only contain: a-z, A-Z, 0-9, `'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      formControlName="lastname"
+      matInput
+      type="text"
+      name="lastname"
+      placeholder="Last name"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('lastname')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid name. Name can only contain: a-z, A-Z, 0-9, `'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      formControlName="phone"
+      [textMask]="{mask: phoneMask}"
+      matInput
+      type="text"
+      name="phone"
+      placeholder="Phone"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('phone')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid phone. Phone template: (000)-000-0000'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      formControlName="email"
+      matInput
+      type="email"
+      name="email"
+      placeholder="Email"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('email')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid email address'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      formControlName="birthday"
+      [matDatepicker]="picker"
+      matInput
+      name="birthday"
+      placeholder="Birthday"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('birthday')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid birthday'
+      }"
+      error-filed
+    ></mat-error>
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+
+  <div>
+    <button mat-button matStepperNext>Next</button>
+  </div>
+</form>

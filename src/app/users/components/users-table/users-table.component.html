@@ -5,7 +5,7 @@
   </mat-toolbar>
 
   <app-table-filter
-    *ngIf="filtredTable?.data"
+    *ngIf="filtredTable?.data.length"
     [data]="filtredTable?.data"
     (applyFilter)="onApllyFilter($event)"
   ></app-table-filter>

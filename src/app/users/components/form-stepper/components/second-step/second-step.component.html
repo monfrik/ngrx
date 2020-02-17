@@ -1,0 +1,139 @@
+<form [formGroup]="formGroup" class="second-step step">
+
+  <mat-form-field>
+    <mat-label>State</mat-label>
+    <mat-select formControlName="name" (selectionChange)="onChangeSelect($event?.value)">
+      <mat-option *ngFor="let state of states" [value]="state.name">
+        {{state.name}}
+      </mat-option>
+    </mat-select>
+    <mat-error
+      [inputControl]="formGroup.get('name')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid state'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      matInput
+      type="text"
+      name="stateShort"
+      placeholder="State abbreviation"
+      disabled
+      [value]="formGroup.get('shortname').value"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('shortname')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid state abbr. State abbr. template - AA'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+  <!-- <mat-form-field>
+    <input
+      formControlName="state"
+      matInput
+      type="text"
+      name="state"
+      placeholder="State"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('state')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid state'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      formControlName="stateShort"
+      matInput
+      type="text"
+      name="stateShort"
+      placeholder="State abbreviation"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('stateShort')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid state abbr. State abbr. template - AA'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field> -->
+
+  <mat-form-field>
+    <input
+      formControlName="city"
+      matInput
+      type="text"
+      name="city"
+      placeholder="City"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('city')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid city'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      formControlName="street"
+      matInput
+      type="text"
+      name="street"
+      placeholder="Street"
+      required
+    >
+    <mat-error
+      [inputControl]="formGroup.get('street')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid street'
+      }"
+      error-filed
+    ></mat-error>
+  </mat-form-field>
+
+  <mat-form-field>
+    <input
+      formControlName="zipcode"
+      [textMask]="{mask: mask}"
+      matInput
+      type="text"
+      name="zipcode"
+      placeholder="Zipcode"
+      required
+    >
+    <mat-error
+      error-filed
+      [inputControl]="formGroup.get('zipcode')"
+      [errorMessages]="{
+        'required': 'this control is required',
+        'pattern': 'Invalid zip code. Zip code template: 000-000'
+      }"
+    ></mat-error>
+  </mat-form-field>
+
+  <div>
+    <button mat-button matStepperPrevious>Back</button>
+    <button mat-button matStepperNext>Next</button>
+  </div>
+</form>

@@ -1,0 +1,229 @@
+<div class="form-list">
+  <form [formGroup]="formGroup" class="form-list-form">
+
+    <mat-form-field>
+      <input
+        formControlName="firstname"
+        matInput
+        type="text"
+        name="firstname"
+        placeholder="First name"
+        required
+      >
+      <mat-error
+        [inputControl]="formGroup.get('firstname')"
+        [errorMessages]="{
+          'required': 'this control is required',
+          'pattern': 'Invalid name. Name can only contain: a-z, A-Z, 0-9, `'
+        }"
+        error-filed
+      ></mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        formControlName="lastname"
+        matInput
+        type="text"
+        name="lastname"
+        placeholder="Last name"
+        required
+      >
+      <mat-error
+        [inputControl]="formGroup.get('lastname')"
+        [errorMessages]="{
+          'required': 'this control is required',
+          'pattern': 'Invalid name. Name can only contain: a-z, A-Z, 0-9, `'
+        }"
+        error-filed
+      ></mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        formControlName="phone"
+        [textMask]="{mask: phoneMask}"
+        matInput
+        type="text"
+        name="phone"
+        placeholder="Phone"
+        required
+      >
+      <mat-error
+        [inputControl]="formGroup.get('phone')"
+        [errorMessages]="{
+          'required': 'this control is required',
+          'pattern': 'Invalid phone. Phone template: (000)-000-0000'
+        }"
+        error-filed
+      ></mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        formControlName="email"
+        matInput
+        type="email"
+        name="email"
+        placeholder="Email"
+        required
+      >
+      <mat-error
+        [inputControl]="formGroup.get('email')"
+        [errorMessages]="{
+          'required': 'this control is required',
+          'pattern': 'Invalid email address'
+        }"
+        error-filed
+      ></mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input
+        formControlName="birthday"
+        [matDatepicker]="picker"
+        matInput
+        name="birthday"
+        placeholder="Birthday"
+        required
+      >
+      <mat-error
+        [inputControl]="formGroup.get('birthday')"
+        [errorMessages]="{
+          'required': 'this control is required',
+          'pattern': 'Invalid birthday'
+        }"
+        error-filed
+      ></mat-error>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+    
+    <div formGroupName="address" class="form-list-subList">
+      <div formGroupName="state" class="form-list-subList">
+
+        <mat-form-field>
+          <mat-label>State</mat-label>
+          <mat-select
+            formControlName="name"
+            (selectionChange)="onChangeSelect($event?.value)"
+            required
+          >
+            <mat-option *ngFor="let state of states" [value]="state.name">
+              {{state.name}}
+            </mat-option>
+          </mat-select>
+          <mat-error
+            [inputControl]="state.get('name')"
+            [errorMessages]="{
+              'required': 'this control is required',
+              'pattern': 'Invalid state'
+            }"
+            error-filed
+          ></mat-error>
+        </mat-form-field>
+
+        <mat-form-field>
+          <input
+            matInput
+            type="text"
+            name="stateShort"
+            placeholder="State abbreviation"
+            disabled
+            [value]="state.get('shortname').value"
+            required
+          >
+          <mat-error
+            [inputControl]="state.get('shortname')"
+            [errorMessages]="{
+              'required': 'this control is required',
+              'pattern': 'Invalid state abbr. State abbr. template - AA'
+            }"
+            error-filed
+          ></mat-error>
+        </mat-form-field>
+
+      </div>
+
+      <mat-form-field>
+        <input
+          formControlName="city"
+          matInput
+          type="text"
+          name="city"
+          placeholder="City"
+          required
+        >
+        <mat-error
+          [inputControl]="address.get('city')"
+          [errorMessages]="{
+            'required': 'this control is required',
+            'pattern': 'Invalid city'
+          }"
+          error-filed
+        ></mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <input
+          formControlName="street"
+          matInput
+          type="text"
+          name="street"
+          placeholder="Street"
+          required
+        >
+        <mat-error
+          [inputControl]="address.get('street')"
+          [errorMessages]="{
+            'required': 'this control is required',
+            'pattern': 'Invalid street'
+          }"
+          error-filed
+        ></mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <input
+          formControlName="zipcode"
+          matInput
+          type="text"
+          name="zipcode"
+          placeholder="Zipcode"
+          required
+        >
+        <mat-error
+          error-filed
+          [inputControl]="address.get('zipcode')"
+          [errorMessages]="{
+            'required': 'this control is required',
+            'pattern': 'Invalid zip code. Zip code template: 000-000'
+          }"
+        ></mat-error>
+      </mat-form-field>
+    </div>
+
+    <file-upload
+      formControlName="avatar"
+      type="file"
+      name="avatar"
+    ></file-upload>
+    <mat-error
+      error-filed
+      [inputControl]="formGroup.get('avatar')"
+      [errorMessages]="{
+        'required': 'this control is required'
+      }"
+    ></mat-error>
+
+    <div class="form-list-actions">
+      <a
+        [routerLink]="['/']"
+        routerLinkActive="router-link-active"
+        class="form-list-link"
+      >Go to table</a> 
+      <button mat-button (click)="formGroup.reset()" type="button">Clear</button>
+      <button mat-button (click)="submit()" type="submit">Save</button>
+    </div>
+  </form>
+</div>

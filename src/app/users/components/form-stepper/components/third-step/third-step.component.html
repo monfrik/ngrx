@@ -1,0 +1,15 @@
+<form [formGroup]="formGroup" class="third-step step">
+
+  <file-upload formControlName="avatar" data-attr="23"></file-upload>
+  <mat-error
+    error-filed
+    [inputControl]="formGroup.get('avatar')"
+    [errorMessages]="{
+      'required': 'this control is required'
+    }"
+  ></mat-error>
+  
+  <div>
+    <button mat-button matStepperNext>Next</button>
+  </div>
+</form>

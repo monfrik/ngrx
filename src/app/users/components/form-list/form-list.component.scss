@@ -1,0 +1,12 @@
+.form-list {
+  padding: 1rem;
+  color: #eee;
+  &-form, &-subList {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  &-link {
+    color: #eee;
+  }
+}

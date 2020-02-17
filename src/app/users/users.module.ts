@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { UsersTableComponent } from './components';
+import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -15,16 +14,35 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material';
 
-import { AppStoreModule } from '@store/store.module';
-import { UsersService } from './services';
+import { FileUploadModule } from '@iplab/ngx-file-upload';
 
+import { TextMaskModule } from 'angular2-text-mask';
+
+import { AppStoreModule } from '@store';
+import { SharedModule } from '../shared/shared.module';
+import { UsersRoutingModule } from './users-routing.module';
+import {
+  UsersTableComponent,
+  UserEditComponent,
+  UserNewComponent,
+  FormListComponent,
+  FormStepperComponent,
+  FirstStepComponent,
+  SecondStepComponent,
+  ThirdStepComponent,
+  TableFilterComponent
+} from './components'; 
+
+import { ErrorFiledComponent } from '@core/components';
 
 @NgModule({
-  declarations: [
-    UsersTableComponent
-  ],
   imports: [
-    CommonModule,
+    ReactiveFormsModule,
+    FileUploadModule,
+    TextMaskModule,
+    SharedModule,
+    AppStoreModule,
+    UsersRoutingModule,
     MatStepperModule,
     MatTabsModule,
     MatToolbarModule,
@@ -36,12 +54,21 @@ import { UsersService } from './services';
     MatDatepickerModule,
     MatNativeDateModule,
     MatInputModule,
-    MatIconModule,
-    AppStoreModule
+    MatIconModule
   ],
-  exports: [
-    UsersTableComponent
+  declarations: [
+    UsersTableComponent,
+    UserEditComponent,
+    UserNewComponent,
+    FormStepperComponent,
+    FormListComponent,
+    FirstStepComponent,
+    SecondStepComponent,
+    ThirdStepComponent,
+    TableFilterComponent,
+    ErrorFiledComponent,
   ],
-  providers: [UsersService]
+  // providers: [MatDatepickerModule]
 })
+
 export class UsersModule { }

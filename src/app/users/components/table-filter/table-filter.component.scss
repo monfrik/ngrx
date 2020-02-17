@@ -1,0 +1,26 @@
+.table-filter {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  padding: 2rem;
+  background-color: #424242;
+  margin: 50px 0;
+  &-field, &-dates {
+    width: 100%;
+  }
+  &-dates {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &-date {
+    width: 45%;
+  }
+  &-action {
+    background-color: #eee;
+    color: #333;
+    &--search {
+      margin-right: 1rem;
+    }
+  }
+}

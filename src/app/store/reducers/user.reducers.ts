@@ -10,14 +10,22 @@ export const userReducers = (
     case EUserActions.GetUsersSuccess: {
       return {
         ...state,
-        users: action.payload
+        users: action.payload,
       };
     }
-
+    
     case EUserActions.GetUserSuccess: {
       return {
         ...state,
-        selectedUser: action.payload
+        selectedUser: action.payload,
+        editedUser: action.payload,
+      }
+    }
+
+    case EUserActions.PatchEditedUser: {
+      return {
+        ...state,
+        editedUser: Object.assign(state.editedUser, action.payload),
       }
     }
 

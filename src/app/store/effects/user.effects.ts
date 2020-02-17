@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Effect, ofType, Actions } from '@ngrx/effects';
 import { Store, select } from '@ngrx/store';
 import { of } from 'rxjs';
-import { switchMap, map, withLatestFrom } from 'rxjs/operators';
+import { switchMap, map, withLatestFrom, tap } from 'rxjs/operators';
 
 import { IAppState } from '../state';
 import {
@@ -24,7 +24,7 @@ export class UserEffects {
     ofType<GetUser>(EUserActions.GetUser),
     map(action => action.payload),
     withLatestFrom(this._store.pipe(select(selectUserList))),
-    switchMap(([id, users]) => {
+    switchMap(([id, users = []]) => {
       const selectedUser = users.filter(user => user.id === +id)[0];
       return of (new GetUserSuccess(selectedUser));
     })

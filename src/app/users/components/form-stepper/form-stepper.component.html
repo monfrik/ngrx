@@ -1,0 +1,28 @@
+<div class="form-stepper">
+  <mat-horizontal-stepper [linear]="false" #stepper>
+    <mat-step [stepControl]="formGroup.get('firstFormGroup')">
+      <ng-template matStepLabel>Fill out your pesonal data</ng-template>
+      <app-first-step [formGroup]="formGroup.get('firstFormGroup')"></app-first-step>
+    </mat-step>
+
+    <mat-step [stepControl]="formGroup.get('secondFormGroup')">
+      <app-second-step [formGroup]="formGroup.get('secondFormGroup')"></app-second-step>
+      <ng-template matStepLabel>Fill out your address</ng-template>
+    </mat-step>
+
+    <mat-step [stepControl]="formGroup.get('thirdFormGroup')">
+      <ng-template matStepLabel>Fill out your avatar</ng-template>
+      <app-third-step [formGroup]="formGroup.get('thirdFormGroup')"></app-third-step>
+    </mat-step>
+
+    <mat-step>
+      <ng-template matStepLabel>Done</ng-template>
+      <div>
+        <a [routerLink]="['/']" routerLinkActive="router-link-active">Go to table</a> 
+        <button mat-button (click)="submit()">Submit</button>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button (click)="stepper.reset()">Reset</button>
+      </div>
+    </mat-step>
+  </mat-horizontal-stepper>
+</div>
