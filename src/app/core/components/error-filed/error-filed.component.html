@@ -1,0 +1,5 @@
+<div *ngIf="inputControl.invalid && (inputControl.dirty || inputControl.touched)">
+  <p *ngFor="let errorTemplate of errorTemplates">
+    <span *ngIf="inputControl.hasError(errorTemplate.error)">{{errorTemplate.message}}</span>
+  </p>
+</div>
