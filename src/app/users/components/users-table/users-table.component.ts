@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Subject } from 'rxjs';
-import { takeUntil, filter, map } from 'rxjs/operators';
+import { takeUntil, filter, map, tap } from 'rxjs/operators';
 
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
@@ -93,7 +93,6 @@ export class UsersTableComponent implements OnInit, OnDestroy {
               filter(data => !!data)
             )
             .subscribe((users) => {
-            console.log('_subscribeFilter', users)
             this.filtredTable.data = users.filter(el => this._filterTable(el, filtres));
           })
         }
@@ -103,18 +102,19 @@ export class UsersTableComponent implements OnInit, OnDestroy {
   private _getUsers(): void {
     this.users$
       .pipe(
+        tap((data: UserModel[]) => {
+          if (data === null) {
+            this._store.dispatch(new GetUsers());
+          }
+        }),
+        filter((data: UserModel[]) => !!data),
         takeUntil(this._destroyed$),
       )
       .subscribe({
-        next: (data: UserModel[] | null) => {
-          console.log('_getUsers', data)
-          if (data === null) {
-            this._store.dispatch(new GetUsers());
-          } else {
-            this.filtredTable = new MatTableDataSource(data);
-            this.filtredTable.sort = this.sort;
-            this.filtredTable.paginator = this.paginator;
-          }
+        next: (data: UserModel[]) => {
+          this.filtredTable = new MatTableDataSource(data);
+          this.filtredTable.sort = this.sort;
+          this.filtredTable.paginator = this.paginator;
         },
         error: () => {},
         complete: () => {},

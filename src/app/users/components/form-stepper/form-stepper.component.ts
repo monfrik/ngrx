@@ -1,8 +1,9 @@
 import {
   Component,
-  Input,
   OnInit,
   OnDestroy,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import { Validators, FormBuilder, FormGroup, AbstractControl } from '@angular/forms';
 
@@ -45,12 +46,13 @@ interface ControlData {
 
 export class FormStepperComponent implements OnInit, OnDestroy {
 
+  @Output()
+  public submitStepper = new EventEmitter<UserModel>();
+  
   public editedUser$ = this._store.pipe(select(selectEditedUser));
 
-  @Input()
-  public initialData: UserModel | void;
-
   public formGroup: FormGroup;
+  public firstGroupForm: FormGroup;
 
   private _destroyed$ = new Subject<void>();
 
@@ -59,6 +61,10 @@ export class FormStepperComponent implements OnInit, OnDestroy {
     private readonly _store: Store<IAppState>,
   ) {}
 
+  get firstNameControl(): AbstractControl {
+    return this.firstGroupForm.get('firstname'),
+  }
+
   public ngOnInit(): void {
     this._formInitialization();
     this._onValueChanges();
@@ -66,19 +72,22 @@ export class FormStepperComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    this._destroyed$.next();
-    this._destroyed$.complete();
-    this._patchEditedUser({data: {}, source: 'state'});
+    this._destroy();
   }
 
   public submit(): void {
-    // this.submitStepper.emit();
+    if (this.formGroup.valid) {
+      const userModel = this._convertToModel(this.formGroup.value);
+      this._destroy();
+      this.submitStepper.emit(userModel);
+    }
   }
 
+  //  update store on tab change
   private _onValueChanges(): void {
     [
       {
-        control: this.formGroup.get('firstFormGroup').get('firstname'),
+        control: this.firstNameControl,
         key: 'firstname',
       },
       {
@@ -173,7 +182,9 @@ export class FormStepperComponent implements OnInit, OnDestroy {
     this.editedUser$
       .pipe(
         takeUntil(this._destroyed$),
-        filter((editedUser: EditedUser) => !!editedUser && editedUser.source !== 'stepper'),
+        filter((editedUser: EditedUser) => {
+          return !!editedUser && !!editedUser.data && editedUser.source !== 'stepper';
+        }),
         map((editedUser: EditedUser) => editedUser.data),
       )
       .subscribe({
@@ -210,6 +221,7 @@ export class FormStepperComponent implements OnInit, OnDestroy {
 
   private _convertToModel (data): UserModel {
     return new UserModel({
+      id: data.firstFormGroup.id,
       firstname: data.firstFormGroup.firstname,
       lastname: data.firstFormGroup.lastname,
       phone: data.firstFormGroup.phone,
@@ -227,10 +239,13 @@ export class FormStepperComponent implements OnInit, OnDestroy {
       avatar: data.thirdFormGroup.avatar,
     })
   }
+});
 
+  // emit event after deleting _onValueChanges
   private _formUpdate(data: UserModel): void {
     this.formGroup.patchValue({
       firstFormGroup: {
+        id: data.id,
         firstname: data.firstname,
         lastname: data.lastname,
         phone: data.phone,
@@ -256,16 +271,23 @@ export class FormStepperComponent implements OnInit, OnDestroy {
     this._store.dispatch(new PatchEditedUser(data));
   }
 
+  private _destroy(): void {
+    this._destroyed$.next();
+    this._destroyed$.complete();
+  }
+
   private _formInitialization(): void {
+    this.firstGroupForm =this._formBuilder.group({
+      id: [''],
+      firstname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
+      lastname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
+      phone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
+      email: ['', [Validators.required, Validators.pattern(EMAIL_PATTERN)]],
+      birthday: ['', [Validators.required]],
+    }),
+
     this.formGroup = this._formBuilder.group({
-      firstFormGroup: this._formBuilder.group({
-        id: [''],
-        firstname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
-        lastname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
-        phone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
-        email: ['', [Validators.required, Validators.pattern(EMAIL_PATTERN)]],
-        birthday: ['', [Validators.required]],
-      }),
+      firstFormGroup: this.firstGroupForm,
       secondFormGroup: this._formBuilder.group({
         name: ['', [Validators.required, Validators.pattern(STATE_PATTERN)]],
         shortname: ['', [Validators.required, Validators.pattern(STATE_SHORT_PATTERN)]],
@@ -274,7 +296,7 @@ export class FormStepperComponent implements OnInit, OnDestroy {
         zipcode: ['', [Validators.required, Validators.pattern(ZIPCODE_PATTERN)]],
       }),
       thirdFormGroup: this._formBuilder.group({
-        avatar: [null, [Validators.required, FileUploadValidators.filesLimit(1)]],
+        avatar: [null],
       }),
     })
   }

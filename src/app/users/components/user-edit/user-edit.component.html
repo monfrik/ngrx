@@ -1,10 +1,10 @@
 <div class="user-edit">
   <mat-tab-group>
     <mat-tab label="Form">
-      <app-form-list></app-form-list>
+      <app-form-list (submitList)="onSubmit($event)"></app-form-list>
     </mat-tab>
     <mat-tab label="Stepper">
-      <app-form-stepper></app-form-stepper>
+      <app-form-stepper (submitStepper)="onSubmit($event)"></app-form-stepper>
     </mat-tab>
   </mat-tab-group>
 </div>

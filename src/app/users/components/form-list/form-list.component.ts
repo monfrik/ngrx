@@ -3,8 +3,9 @@ import {
   OnInit,
   ChangeDetectionStrategy,
   OnDestroy,
+  Output,
+  EventEmitter,
 } from '@angular/core';
-import { Router } from '@angular/router';
 
 import { Subject } from 'rxjs';
 import { filter, takeUntil, map } from 'rxjs/operators';
@@ -35,7 +36,7 @@ import {
   STATES,
 } from '@app/utils';
 
-import { PatchEditedUser, UpdateSelectedUser } from '@store/actions';
+import { PatchEditedUser } from '@store/actions';
 import { selectEditedUser } from '@store/selectos';
 import { IAppState } from '@store/state';
 import { UserModel } from '@app/users/models';
@@ -56,7 +57,11 @@ interface ControlData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 
+// provide store data via input
 export class FormListComponent implements OnInit, OnDestroy {
+
+  @Output()
+  public submitList = new EventEmitter<UserModel>();
 
   public editedUser$ = this._store.pipe(select(selectEditedUser));
 
@@ -71,7 +76,6 @@ export class FormListComponent implements OnInit, OnDestroy {
   public constructor(
     private readonly _formBuilder: FormBuilder,
     private readonly _store: Store<IAppState>,
-    private readonly _router: Router,
   ) {}
 
   public get address(): AbstractControl {
@@ -80,7 +84,6 @@ export class FormListComponent implements OnInit, OnDestroy {
 
   public get state(): AbstractControl {
     return this.formGroup.get('address').get('state');
-    this._destroyed$.complete();
   }
 
   public ngOnInit(): void {
@@ -90,19 +93,14 @@ export class FormListComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    this._destroyed$.next();
-    this._destroyed$.complete();
-    this._patchEditedUser({data: {}, source: 'state'});
+    this._destroy();
   }
 
   public submit(): void {
     if (this.formGroup.valid) {
-      this._destroyed$.next();
-      this._destroyed$.complete();
-      this._store.dispatch(new UpdateSelectedUser(new UserModel(this.formGroup.value)));
-      // this._router.navigate(['/users']);
+      this._destroy();
+      this.submitList.emit(new UserModel(this.formGroup.value));
     }
-    // this.submitList.emit();
   }
 
   public onChangeSelect(stateName: string): void {
@@ -219,8 +217,8 @@ export class FormListComponent implements OnInit, OnDestroy {
     this.editedUser$
       .pipe(
         takeUntil(this._destroyed$),
-        filter((editedUser: EditedUser) => !!editedUser && editedUser.source !== 'list'),
-        map((editedUser: EditedUser) => editedUser.data),
+        filter((eU: EditedUser) => !!eU && !!eU.data && eU.source !== 'list'),
+        map((editedUser: EditedUser) => editedUser.data || {}),
       )
       .subscribe({
         next: (data: UserModel) => {
@@ -235,6 +233,12 @@ export class FormListComponent implements OnInit, OnDestroy {
 
   private _patchEditedUser(data: EditedUserPayload): void {
     this._store.dispatch(new PatchEditedUser(data));
+  }
+
+
+  private _destroy(): void {
+    this._destroyed$.next();
+    this._destroyed$.complete();
   }
 
   private _formInitialization(): void {

@@ -235,7 +235,6 @@ export class TableFilterComponent implements OnInit {
 
     if (usersId) {
       if (typeof(usersId) === 'string') {
-        console.log(this.data)
         this.users.push(this.data[parseInt(usersId)-1]);
       } else {
         usersId.forEach((idUser) => {

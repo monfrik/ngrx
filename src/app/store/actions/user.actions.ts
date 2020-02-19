@@ -58,4 +58,11 @@ export class UpdateSelectedUserSuccess implements Action {
   constructor (public payload: UserModel){}
 }
 
-export type UserActions = GetUsers | GetUsersSuccess | GetUser | GetUserSuccess | GetEditedUser | PatchEditedUser | UpdateSelectedUser | UpdateSelectedUserSuccess;
+export type UserActions = GetUsers 
+| GetUsersSuccess
+| GetUser 
+| GetUserSuccess 
+| GetEditedUser
+| PatchEditedUser
+| UpdateSelectedUser
+| UpdateSelectedUserSuccess;

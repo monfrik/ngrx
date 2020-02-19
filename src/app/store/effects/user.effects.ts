@@ -14,7 +14,6 @@ import {
   UpdateSelectedUser,
   UpdateSelectedUserSuccess
 } from '../actions';
-// import { UsersService } from '@app/users/services';
 import { UserApiService } from '@core/services';
 import { selectUserList } from '../selectos';
 import { UserModel } from '@app/users/models';
@@ -23,31 +22,29 @@ import { UserModel } from '@app/users/models';
 @Injectable()
 export class UserEffects {
   @Effect()
-  getUser$ = this._actions$.pipe(
+  public getUser$ = this._actions$.pipe(
     ofType<GetUser>(EUserActions.GetUser),
     map(action => action.payload),
     withLatestFrom(this._store.pipe(select(selectUserList))),
-    switchMap(([id, users = []]) => {
+    map(([id, users = []]) => {
       const selectedUser = users.filter(user => user.id === +id)[0];
-      return of (new GetUserSuccess(selectedUser));
+      return new GetUserSuccess(selectedUser);
     })
   );
 
   @Effect()
-  getUsers$ = this._actions$.pipe(
+  public getUsers$ = this._actions$.pipe(
     ofType<GetUsers>(EUserActions.GetUsers),
     switchMap(() => this._usersService.getUsers()),
-    switchMap((users: UserModel[]) => of(new GetUsersSuccess(users)))
+    map((users: UserModel[]) => new GetUsersSuccess(users))
   )
 
   @Effect()
-  updateSelectedUser$ = this._actions$.pipe(
+  public updateSelectedUser$ = this._actions$.pipe(
     ofType<UpdateSelectedUser>(EUserActions.UpdateSelectedUser),
     map(action => action.payload),
-    tap(data => console.log('effect before', data)),
-    tap((user: UserModel) => this._usersService.updateUser(user)),
-    tap(data => console.log('effect after', data)),
-    switchMap((data: UserModel) => of(new UpdateSelectedUserSuccess(data)))
+    switchMap((user: UserModel) => this._usersService.updateUser(user)),
+    map((data: UserModel) => new UpdateSelectedUserSuccess(data))
   )
 
   constructor (

@@ -1,6 +1,7 @@
 import { EUserActions } from '../actions';
 import { UserActions } from '../actions';
 import { initialUserState, IUserState } from '../state';
+import { UserModel } from '@app/users/models';
 
 export const userReducers = (
   state = initialUserState,
@@ -26,13 +27,27 @@ export const userReducers = (
     }
 
     case EUserActions.PatchEditedUser: {
+      let editedUser: UserModel;
+      if (action.payload.data === null) {
+        editedUser = null
+      }
+      if (action.payload.data === undefined) {
+        if (state.editedUser.data) {
+          editedUser = {...state.editedUser.data};
+        } else {
+          editedUser = null;
+        }
+      }
+      if (action.payload.data) {
+        editedUser = {
+          ...state.editedUser.data,
+          ...action.payload.data
+        }
+      }
       return {
         ...state,
         editedUser: {
-          data: {
-            ...state.editedUser.data,
-            ...action.payload.data
-          },
+          data: editedUser,
           source: action.payload.source
         },
       }
@@ -45,16 +60,10 @@ export const userReducers = (
         : element
       })
       
-      console.log({
-        ...state,
-        users,
-        editedUser: null,
-        selectedUser: null,
-      })
       return {
         ...state,
         users,
-        editedUser: null,
+        editedUser: {data: null, source: 'state'},
         selectedUser: null,
       }
     }

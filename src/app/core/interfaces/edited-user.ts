@@ -2,7 +2,7 @@ import { UserModel } from '@app/users/models';
 
 
 export interface EditedUserPayload {
-  data: {
+  data?: {
     [key: string]: any,
   };
   source: UserEditSource;
