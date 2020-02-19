@@ -6,7 +6,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
-import { UsersService } from '@app/users/services';
+// import { UsersService } from '@app/users/services';
 import { appReducers } from './reducers';
 import { UserEffects } from './effects';
 import { environment } from 'environments/environment';
@@ -21,6 +21,6 @@ import { environment } from 'environments/environment';
     StoreRouterConnectingModule.forRoot({stateKey: 'router'}),
     !environment.production ? StoreDevtoolsModule.instrument(): [],
   ],
-  providers: [UsersService]
+  // providers: [UsersService]
 })
 export class AppStoreModule { }

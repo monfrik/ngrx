@@ -80,6 +80,7 @@ export class FormListComponent implements OnInit, OnDestroy {
 
   public get state(): AbstractControl {
     return this.formGroup.get('address').get('state');
+    this._destroyed$.complete();
   }
 
   public ngOnInit(): void {
@@ -96,8 +97,10 @@ export class FormListComponent implements OnInit, OnDestroy {
 
   public submit(): void {
     if (this.formGroup.valid) {
-      this._router.navigate(['/users']);
+      this._destroyed$.next();
+      this._destroyed$.complete();
       this._store.dispatch(new UpdateSelectedUser(new UserModel(this.formGroup.value)));
+      // this._router.navigate(['/users']);
     }
     // this.submitList.emit();
   }

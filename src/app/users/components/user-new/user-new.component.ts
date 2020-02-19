@@ -6,7 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { UsersService } from '../../services';
+// import { UsersService } from '../../services';
 import { UserModel } from '../../models/user.model';
 
 
@@ -14,7 +14,7 @@ import { UserModel } from '../../models/user.model';
   selector: 'app-user-new',
   templateUrl: './user-new.component.html',
   styleUrls: ['./user-new.component.scss'],
-  providers: [ UsersService ]
+  // providers: [ UsersService ]
 })
 
 export class UserNewComponent implements OnDestroy {
@@ -27,7 +27,7 @@ export class UserNewComponent implements OnDestroy {
   public constructor(
     private readonly _router: Router,
     private readonly _snackBar: MatSnackBar,
-    private readonly _usersService: UsersService,
+    // private readonly _usersService: UsersService,
   ) {}
 
   public ngOnDestroy(): void {
@@ -38,15 +38,15 @@ export class UserNewComponent implements OnDestroy {
   public onSubmit(): void {
     if (this.formList.valid) {
       const newUser = new UserModel(this.formList.getRawValue());
-      this._usersService
-        .addUser(newUser)
-        .pipe(
-          takeUntil(this._destroyed$)
-        )
-        .subscribe(() => {
-          this._openSnackBar('New user added', 'Ok');
-          this._router.navigate(['/users']);
-        });
+      // this._usersService
+      //   .addUser(newUser)
+      //   .pipe(
+      //     takeUntil(this._destroyed$)
+      //   )
+      //   .subscribe(() => {
+      //     this._openSnackBar('New user added', 'Ok');
+      //     this._router.navigate(['/users']);
+      //   });
     }
   }
 
