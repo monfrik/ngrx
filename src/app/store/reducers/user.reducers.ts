@@ -18,14 +18,44 @@ export const userReducers = (
       return {
         ...state,
         selectedUser: action.payload,
-        editedUser: action.payload,
+        editedUser: {
+          data: action.payload,
+          source: 'state'
+        }
       }
     }
 
     case EUserActions.PatchEditedUser: {
       return {
         ...state,
-        editedUser: Object.assign(state.editedUser, action.payload),
+        editedUser: {
+          data: {
+            ...state.editedUser.data,
+            ...action.payload.data
+          },
+          source: action.payload.source
+        },
+      }
+    }
+
+    case EUserActions.UpdateSelectedUserSuccess: {
+      const users = state.users.map(element => {
+        return element.id === action.payload.id
+        ? action.payload
+        : element
+      })
+      
+      console.log({
+        ...state,
+        users,
+        editedUser: null,
+        selectedUser: null,
+      })
+      return {
+        ...state,
+        users,
+        editedUser: null,
+        selectedUser: null,
       }
     }
 

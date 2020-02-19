@@ -8,7 +8,7 @@ export class UserModel {
   public email: string;
   public birthday: Date;
   public address: AddressModel;
-  public avatar: any[];
+  public avatar: any;
 
   public constructor(data: any = {}) {
     this.id = data.id || void 0;

@@ -51,4 +51,9 @@ export class UserApiService {
       .post<UserModel>(USERS_URL, user, HTTP_OPTIONS);
   }
 
+  public updateUser(user: UserModel): Observable<UserModel> {
+    return this._http
+      .put<UserModel>(USERS_URL, user, HTTP_OPTIONS);
+  }
+
 }

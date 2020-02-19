@@ -4,14 +4,14 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Subject } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
+import { takeUntil, filter } from 'rxjs/operators';
 
 import { Store, select } from '@ngrx/store';
 
 import { GetUser, GetUsers } from '@store/actions';
+import { selectUserList, selectEditedUser } from '@store/selectos';
 import { IAppState } from '@store/state';
 import { UserModel } from '../../models/user.model';
-import { selectSelectedUser, selectUserList } from '@app/store/selectos';
 
 
 @Component({
@@ -37,7 +37,7 @@ export class UserEditComponent implements OnInit, OnDestroy{
   public ngOnInit(): void {
     this._route.params
       .subscribe(params => {
-        this._getUserData(params['id']);
+        this._getUser(+params['id']);
       })
   }
 
@@ -61,7 +61,23 @@ export class UserEditComponent implements OnInit, OnDestroy{
     }
   }
 
-  private _getUserData(id: string): void {
+  private _getUser(id: number): void {
+    this._store
+      .pipe(
+        select(selectEditedUser),
+        takeUntil(this._destroyed$),
+        filter(data => !data)
+      )
+      .subscribe({
+        next: (data) => {
+          this._fetchUser(id);
+        },
+        error: () => {},
+        complete: () => {},
+      })
+  }
+
+  private _fetchUser(id: number): void {
     this._store
       .pipe(
         select(selectUserList),
@@ -72,7 +88,7 @@ export class UserEditComponent implements OnInit, OnDestroy{
           if (!data) {
             this._store.dispatch(new GetUsers());
           } else {
-            this._store.dispatch(new GetUser(+id));
+            this._store.dispatch(new GetUser(id));
           }
         },
         error: () => {},

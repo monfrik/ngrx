@@ -186,6 +186,7 @@
       <mat-form-field>
         <input
           formControlName="zipcode"
+          [textMask]="{mask: zipcodeMask}"
           matInput
           type="text"
           name="zipcode"
@@ -205,6 +206,8 @@
 
     <file-upload
       formControlName="avatar"
+      [multiple]="false"
+      [animation]="true"
       type="file"
       name="avatar"
     ></file-upload>

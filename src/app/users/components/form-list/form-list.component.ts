@@ -2,7 +2,9 @@ import {
   Component,
   OnInit,
   ChangeDetectionStrategy,
+  OnDestroy,
 } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { Subject } from 'rxjs';
 import { filter, takeUntil, map } from 'rxjs/operators';
@@ -16,7 +18,8 @@ import {
 
 import { FileUploadValidators } from '@iplab/ngx-file-upload';
 
-import { UsersService } from '@app/users/services';
+import { Store, select } from '@ngrx/store';
+
 import {
   PHONE_MASK,
   ZIPCODE_MASK,
@@ -32,18 +35,18 @@ import {
   STATES,
 } from '@app/utils';
 
-import { UserModel } from '@app/users/models';
-import { Store, select } from '@ngrx/store';
+import { PatchEditedUser, UpdateSelectedUser } from '@store/actions';
+import { selectEditedUser } from '@store/selectos';
 import { IAppState } from '@store/state';
-import { selectSelectedUser, selectEditedUser } from '@store/selectos';
-import { PatchEditedUser } from '@app/store/actions';
+import { UserModel } from '@app/users/models';
+
+import { EditedUser, EditedUserPayload } from '@core/interfaces';
 
 
 interface ControlData {
   control: AbstractControl;
   key: string;
-  source: 'stepper' | 'list' | 'service';
-  callback?: any;
+  callback?: Function;
 }
 
 @Component({
@@ -53,13 +56,12 @@ interface ControlData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 
-export class FormListComponent implements OnInit {
+export class FormListComponent implements OnInit, OnDestroy {
 
-  public user$ = this._store.pipe(select(selectSelectedUser));
   public editedUser$ = this._store.pipe(select(selectEditedUser));
+
   public phoneMask: (string | RegExp)[] = PHONE_MASK;
   public zipcodeMask: (string | RegExp)[] = ZIPCODE_MASK;
-
   public states = STATES;
 
   public formGroup: FormGroup;
@@ -69,13 +71,14 @@ export class FormListComponent implements OnInit {
   public constructor(
     private readonly _formBuilder: FormBuilder,
     private readonly _store: Store<IAppState>,
+    private readonly _router: Router,
   ) {}
 
-  public get address() {
+  public get address(): AbstractControl {
     return this.formGroup.get('address');
   }
 
-  public get state() {
+  public get state(): AbstractControl {
     return this.formGroup.get('address').get('state');
   }
 
@@ -88,14 +91,19 @@ export class FormListComponent implements OnInit {
   public ngOnDestroy(): void {
     this._destroyed$.next();
     this._destroyed$.complete();
+    this._patchEditedUser({data: {}, source: 'state'});
   }
 
   public submit(): void {
+    if (this.formGroup.valid) {
+      this._router.navigate(['/users']);
+      this._store.dispatch(new UpdateSelectedUser(new UserModel(this.formGroup.value)));
+    }
     // this.submitList.emit();
   }
 
-  public onChangeSelect(stateName): void {
-    const currentState = STATES.find(element => element.name === stateName);
+  public onChangeSelect(stateName: string): void {
+    const currentState = STATES.find(state => state.name === stateName);
     this.state.get('shortname').patchValue(currentState.shortname);
   }
 
@@ -124,32 +132,65 @@ export class FormListComponent implements OnInit {
       {
         control: this.formGroup.get('avatar'),
         key: 'avatar',
+        callback: value => {return {avatar: value[0]}}
       },
       {
         control: this.state.get('name'),
         key: 'state',
-        callback: value => STATES.find(element => element.name === value),
+        callback: value => {
+          return {
+            address: {
+              ...this.address.value,
+              state: {
+                ...STATES.find(element => element.name === value)
+              }
+            }
+          }
+        },
       },
       {
         control: this.address.get('city'),
         key: 'city',
+        callback: city => {
+          return {
+            address: {
+              ...this.address.value,
+              city
+            }
+          }
+        },
       },
       {
         control: this.address.get('street'),
         key: 'street',
+        callback: street => {
+          return {
+            address: {
+              ...this.address.value,
+              street
+            }
+          }
+        },
       },
       {
         control: this.address.get('zipcode'),
         key: 'zipcode',
+        callback: zipcode => {
+          return {
+            address: {
+              ...this.address.value,
+              zipcode
+            }
+          }
+        },
       }
     ].forEach((element: ControlData) => {
-      element.source = 'list';
       this._controlListener(element)
     });
   }
 
   /**
-   *  function that subscribes to each given control and executes path value
+   *  function that subscribes to each given control and executes PatchEditedUser
    *  @param ControlData controller with options
    */
   private _controlListener(controlParams: ControlData): void {
@@ -159,19 +200,15 @@ export class FormListComponent implements OnInit {
         takeUntil(this._destroyed$),
       )
       .subscribe({
-        next: (value) => {
-          if (controlParams.callback) {
-            console.log('_controlListener valueChanges', controlParams.callback(value));
-            this._store.dispatch(new PatchEditedUser(controlParams.callback(value)))
-            // this._usersService
-            //   .patchUserForm(controlParams.callback(value), controlParams.source);
-          } else {
-            console.log('_controlListener valueChanges', {[controlParams.key]: value});
-            this._store.dispatch(new PatchEditedUser({[controlParams.key]: value}))
-            // this._usersService
-            //   .patchUserForm({[controlParams.key]: value}, controlParams.source);
-          }
-        }
+        next: (value: any) => {
+          const patchValue = controlParams.callback
+          ? controlParams.callback(value)
+          : {[controlParams.key]: value};
+
+          this._patchEditedUser({data: patchValue, source: 'list'});
+        },
+        error: () => {},
+        complete: () => {},
       });
   }
 
@@ -179,38 +216,33 @@ export class FormListComponent implements OnInit {
     this.editedUser$
       .pipe(
         takeUntil(this._destroyed$),
-        // filter(data => !!data)
-        map(data => data || {})
+        filter((editedUser: EditedUser) => !!editedUser && editedUser.source !== 'list'),
+        map((editedUser: EditedUser) => editedUser.data),
       )
       .subscribe({
-        next: (data) => {
-          console.log('_getValueChanges editedUser = ', data)
+        next: (data: UserModel) => {
           this.formGroup.patchValue(data, {
             emitEvent: false,
           });
-        }
+        },
+        error: () => {},
+        complete: () => {},
       })
-    // this._usersService.userFormData$
-    //   .pipe(
-    //     filter(data => data.source !== 'list')
-    //   )
-    //   .subscribe({
-    //     next: (data) => {
-    //       console.log('FormListComponent _getValueChanges', data.userData)
-    //       // this.formGroup.patchValue(data.userData, {
-    //       //   emitEvent: false,
-    //       // });
-    //     }
-    //   })
+  }
+
+  private _patchEditedUser(data: EditedUserPayload): void {
+    this._store.dispatch(new PatchEditedUser(data));
   }
 
   private _formInitialization(): void {
     this.formGroup = this._formBuilder.group({
+      id: [''],
       firstname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
       lastname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
       phone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
       email: ['', [Validators.required, Validators.pattern(EMAIL_PATTERN)]],
-      avatar: [null, [Validators.required, FileUploadValidators.filesLimit(1)]],
+      // avatar: [null, [Validators.required, FileUploadValidators.filesLimit(1)]],
+      avatar: [null, []],
       birthday: ['', [Validators.required]],
       address: this._formBuilder.group({
         state: this._formBuilder.group({

@@ -10,9 +10,12 @@ import {
   GetUsers,
   GetUsersSuccess,
   GetUser,
-  GetUserSuccess
+  GetUserSuccess,
+  UpdateSelectedUser,
+  UpdateSelectedUserSuccess
 } from '../actions';
-import { UsersService } from '@app/users/services';
+// import { UsersService } from '@app/users/services';
+import { UserApiService } from '@core/services';
 import { selectUserList } from '../selectos';
 import { UserModel } from '@app/users/models';
 
@@ -37,8 +40,18 @@ export class UserEffects {
     switchMap((users: UserModel[]) => of(new GetUsersSuccess(users)))
   )
 
+  @Effect()
+  updateSelectedUser$ = this._actions$.pipe(
+    ofType<UpdateSelectedUser>(EUserActions.UpdateSelectedUser),
+    map(action => action.payload),
+    tap(data => console.log('effect before', data)),
+    tap((user: UserModel) => this._usersService.updateUser(user)),
+    tap(data => console.log('effect after', data)),
+    switchMap((data: UserModel) => of(new UpdateSelectedUserSuccess(data)))
+  )
+
   constructor (
-    private readonly _usersService: UsersService,
+    private readonly _usersService: UserApiService,
     private readonly _actions$: Actions,
     private readonly _store: Store<IAppState>
   ) {}

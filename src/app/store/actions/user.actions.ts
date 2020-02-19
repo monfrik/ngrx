@@ -1,7 +1,7 @@
 import { Action } from '@ngrx/store';
 
 import { UserModel } from '@app/users/models';
-
+import { EditedUserPayload } from '@core/interfaces';
 
 export enum EUserActions {
   GetUsers = '[User] Get Users',
@@ -10,6 +10,8 @@ export enum EUserActions {
   GetUserSuccess = '[User] Get User Success',
   GetEditedUser = '[User] Get Edited User',
   PatchEditedUser = '[User] Patch Edited User',
+  UpdateSelectedUser = '[User] Update Selected User',
+  UpdateSelectedUserSuccess = '[User] Update Selected User Success',
 }
 
 export class GetUsers implements Action {
@@ -41,7 +43,19 @@ export class GetEditedUser implements Action {
 export class PatchEditedUser implements Action {
   public readonly type = EUserActions.PatchEditedUser;
 
-  constructor (public payload: {[key: string]: any}){}
+  constructor (public payload: EditedUserPayload){}
 }
 
-export type UserActions = GetUsers | GetUsersSuccess | GetUser | GetUserSuccess | GetEditedUser | PatchEditedUser;
+export class UpdateSelectedUser implements Action {
+  public readonly type = EUserActions.UpdateSelectedUser;
+
+  constructor (public payload: UserModel){}
+}
+
+export class UpdateSelectedUserSuccess implements Action {
+  public readonly type = EUserActions.UpdateSelectedUserSuccess;
+
+  constructor (public payload: UserModel){}
+}
+
+export type UserActions = GetUsers | GetUsersSuccess | GetUser | GetUserSuccess | GetEditedUser | PatchEditedUser | UpdateSelectedUser | UpdateSelectedUserSuccess;

@@ -82,7 +82,7 @@ export class UsersTableComponent implements OnInit, OnDestroy {
   private _subscribeFilter(): void {
     this._filter$
       .pipe(
-        takeUntil(this._destroyed$)
+        takeUntil(this._destroyed$),
       )
       .subscribe({
         next: (filtres: RouterParams) => {
@@ -101,17 +101,20 @@ export class UsersTableComponent implements OnInit, OnDestroy {
   }
 
   private _getUsers(): void {
-    this._store.dispatch(new GetUsers());
     this.users$
       .pipe(
-        map(data => data || [])
+        takeUntil(this._destroyed$),
       )
       .subscribe({
-        next: (data: UserModel[]) => {
-          console.log('_getUsers', data);
-          this.filtredTable = new MatTableDataSource(data);
-          this.filtredTable.sort = this.sort;
-          this.filtredTable.paginator = this.paginator;
+        next: (data: UserModel[] | null) => {
+          console.log('_getUsers', data)
+          if (data === null) {
+            this._store.dispatch(new GetUsers());
+          } else {
+            this.filtredTable = new MatTableDataSource(data);
+            this.filtredTable.sort = this.sort;
+            this.filtredTable.paginator = this.paginator;
+          }
         },
         error: () => {},
         complete: () => {},

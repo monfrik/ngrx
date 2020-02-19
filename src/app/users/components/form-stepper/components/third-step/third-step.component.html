@@ -1,6 +1,11 @@
 <form [formGroup]="formGroup" class="third-step step">
 
-  <file-upload formControlName="avatar" data-attr="23"></file-upload>
+  <file-upload
+    formControlName="avatar"
+    [multiple]="false"
+    [animation]="true"
+    data-attr="23"
+  ></file-upload>
   <mat-error
     error-filed
     [inputControl]="formGroup.get('avatar')"
