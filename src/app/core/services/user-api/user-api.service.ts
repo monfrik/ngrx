@@ -36,7 +36,7 @@ export class UserApiService {
       );
   }
 
-  public getUser(id: string): Observable<UserModel> {
+  public getUser(id: number): Observable<UserModel> {
     return this._http
       .get<UserModel>(USERS_URL+'/'+id)
       .pipe(
@@ -52,6 +52,7 @@ export class UserApiService {
   }
 
   public updateUser(user: UserModel): Observable<UserModel> {
+    console.log('updateUser user = ', user)
     return this._http
       .put<UserModel>(USERS_URL, user, HTTP_OPTIONS);
   }

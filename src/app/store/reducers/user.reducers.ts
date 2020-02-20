@@ -1,21 +1,20 @@
-import { EUserActions } from '../actions';
-import { UserActions } from '../actions';
+import { UserAction, UserActionList } from '../actions';
 import { initialUserState, IUserState } from '../state';
 import { UserModel } from '@app/users/models';
 
 export const userReducers = (
   state = initialUserState,
-  action: UserActions
+  action: UserActionList,
 ): IUserState => {
   switch (action.type) {
-    case EUserActions.GetUsersSuccess: {
+    case UserAction.FetchUsers: {
       return {
         ...state,
         users: action.payload,
       };
     }
     
-    case EUserActions.GetUserSuccess: {
+    case UserAction.FetchUser: {
       return {
         ...state,
         selectedUser: action.payload,
@@ -26,11 +25,13 @@ export const userReducers = (
       }
     }
 
-    case EUserActions.PatchEditedUser: {
+    case UserAction.PatchEditedUser: {
       let editedUser: UserModel;
+
       if (action.payload.data === null) {
         editedUser = null
       }
+
       if (action.payload.data === undefined) {
         if (state.editedUser.data) {
           editedUser = {...state.editedUser.data};
@@ -38,12 +39,14 @@ export const userReducers = (
           editedUser = null;
         }
       }
+
       if (action.payload.data) {
         editedUser = {
           ...state.editedUser.data,
           ...action.payload.data
         }
       }
+      
       return {
         ...state,
         editedUser: {
@@ -53,16 +56,9 @@ export const userReducers = (
       }
     }
 
-    case EUserActions.UpdateSelectedUserSuccess: {
-      const users = state.users.map(element => {
-        return element.id === action.payload.id
-        ? action.payload
-        : element
-      })
-      
+    case UserAction.SaveSelectedUser: {
       return {
         ...state,
-        users,
         editedUser: {data: null, source: 'state'},
         selectedUser: null,
       }

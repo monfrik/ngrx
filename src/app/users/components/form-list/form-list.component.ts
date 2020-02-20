@@ -21,6 +21,8 @@ import { FileUploadValidators } from '@iplab/ngx-file-upload';
 
 import { Store, select } from '@ngrx/store';
 
+import { UsersService } from '@app/users/services';
+
 import {
   PHONE_MASK,
   ZIPCODE_MASK,
@@ -41,14 +43,12 @@ import { selectEditedUser } from '@store/selectos';
 import { IAppState } from '@store/state';
 import { UserModel } from '@app/users/models';
 
-import { EditedUser, EditedUserPayload } from '@core/interfaces';
+import {
+  EditedUser,
+  EditedUserPayload,
+  UserEditSource
+} from '@core/interfaces';
 
-
-interface ControlData {
-  control: AbstractControl;
-  key: string;
-  callback?: Function;
-}
 
 @Component({
   selector: 'app-form-list',
@@ -63,6 +63,9 @@ export class FormListComponent implements OnInit, OnDestroy {
   @Output()
   public submitList = new EventEmitter<UserModel>();
 
+  @Output()
+  public patchUser = new EventEmitter<EditedUserPayload>();
+
   public editedUser$ = this._store.pipe(select(selectEditedUser));
 
   public phoneMask: (string | RegExp)[] = PHONE_MASK;
@@ -71,11 +74,14 @@ export class FormListComponent implements OnInit, OnDestroy {
 
   public formGroup: FormGroup;
 
-  private _destroyed$ = new Subject<void>();
+  private _destroy$ = new Subject<void>();
+  private _source: UserEditSource = 'list';
+  private _submited = false;
   
   public constructor(
     private readonly _formBuilder: FormBuilder,
     private readonly _store: Store<IAppState>,
+    private readonly _usersService: UsersService,
   ) {}
 
   public get address(): AbstractControl {
@@ -87,17 +93,19 @@ export class FormListComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit(): void {
+    this._changeTabSubscribe();
     this._formInitialization();
-    this._onValueChanges();
     this._getValueChanges();
   }
 
   public ngOnDestroy(): void {
+    this._patchUser();
     this._destroy();
   }
 
   public submit(): void {
     if (this.formGroup.valid) {
+      this._submited = true;
       this._destroy();
       this.submitList.emit(new UserModel(this.formGroup.value));
     }
@@ -108,121 +116,27 @@ export class FormListComponent implements OnInit, OnDestroy {
     this.state.get('shortname').patchValue(currentState.shortname);
   }
 
-  private _onValueChanges(): void {
-    [
-      {
-        control: this.formGroup.get('firstname'),
-        key: 'firstname',
-      },
-      {
-        control: this.formGroup.get('lastname'),
-        key: 'lastname',
-      },
-      {
-        control: this.formGroup.get('phone'),
-        key: 'phone',
-      },
-      {
-        control: this.formGroup.get('email'),
-        key: 'email',
-      },
-      {
-        control: this.formGroup.get('birthday'),
-        key: 'birthday',
-      },
-      {
-        control: this.formGroup.get('avatar'),
-        key: 'avatar',
-        callback: value => {return {avatar: value[0]}}
-      },
-      {
-        control: this.state.get('name'),
-        key: 'state',
-        callback: value => {
-          return {
-            address: {
-              ...this.address.value,
-              state: {
-                ...STATES.find(element => element.name === value)
-              }
-            }
-          }
-        },
-      },
-      {
-        control: this.address.get('city'),
-        key: 'city',
-        callback: city => {
-          return {
-            address: {
-              ...this.address.value,
-              city
-            }
-          }
-        },
-      },
-      {
-        control: this.address.get('street'),
-        key: 'street',
-        callback: street => {
-          return {
-            address: {
-              ...this.address.value,
-              street
-            }
-          }
-        },
-      },
-      {
-        control: this.address.get('zipcode'),
-        key: 'zipcode',
-        callback: zipcode => {
-          return {
-            address: {
-              ...this.address.value,
-              zipcode
-            }
-          }
-        },
-      }
-    ].forEach((element: ControlData) => {
-      this._controlListener(element)
-    });
-  }
-
-  /**
-   *  function that subscribes to each given control and executes PatchEditedUser
-   *  @param ControlData controller with options
-   */
-  private _controlListener(controlParams: ControlData): void {
-    controlParams.control
-      .valueChanges
-      .pipe(
-        takeUntil(this._destroyed$),
-      )
-      .subscribe({
-        next: (value: any) => {
-          const patchValue = controlParams.callback
-          ? controlParams.callback(value)
-          : {[controlParams.key]: value};
-
-          this._patchEditedUser({data: patchValue, source: 'list'});
-        },
-        error: () => {},
-        complete: () => {},
+  private _patchUser(): void {
+    if (this.formGroup.touched && !this._submited) {
+      this.patchUser.emit({
+        data: new UserModel(this.formGroup.value),
+        source: this._source,
       });
+    }
   }
 
   private _getValueChanges(): void {
     this.editedUser$
       .pipe(
-        takeUntil(this._destroyed$),
-        filter((eU: EditedUser) => !!eU && !!eU.data && eU.source !== 'list'),
-        map((editedUser: EditedUser) => editedUser.data || {}),
+        takeUntil(this._destroy$),
+        filter((editedUser: EditedUser) => {
+          return !!editedUser && !!editedUser.data && editedUser.source !== this._source;
+        }),
+        map((editedUser: EditedUser) => editedUser.data),
       )
       .subscribe({
-        next: (data: UserModel) => {
-          this.formGroup.patchValue(data, {
+        next: (user: UserModel) => {
+          this.formGroup.patchValue(user, {
             emitEvent: false,
           });
         },
@@ -231,19 +145,13 @@ export class FormListComponent implements OnInit, OnDestroy {
       })
   }
 
-  private _patchEditedUser(data: EditedUserPayload): void {
-    this._store.dispatch(new PatchEditedUser(data));
-  }
-
-
   private _destroy(): void {
-    this._destroyed$.next();
-    this._destroyed$.complete();
+    this._destroy$.next();
+    this._destroy$.complete();
   }
 
   private _formInitialization(): void {
     this.formGroup = this._formBuilder.group({
-      id: [''],
       firstname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
       lastname: ['', [Validators.required, Validators.pattern(NAME_PATTERN)]],
       phone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
@@ -263,4 +171,24 @@ export class FormListComponent implements OnInit, OnDestroy {
     })
   }
 
+  private _changeTabSubscribe(): void {
+    this._usersService.changeTabEvent.subscribe({
+      next: (tabIndex: number) => {
+        if (tabIndex !== 0) {
+          this._patchUser();
+        }
+      },
+      error: () => {},
+      complete: () => {},
+    });
+  }
+
 }
+/*
+- Избавиться от source
+- выпилить selectedUser
+- 
+- если нет выбранного пользователя в списке, то брать с бекенда
+- на userTable получать сразу отфильтрованные данные (отправлять параметры в сторе через экшен. Фильтровать в редьюсере)
+- создать новую ветку store entities (@ngrx/data)
+*/

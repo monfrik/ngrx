@@ -4,13 +4,15 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Subject } from 'rxjs';
-import { takeUntil, filter, tap } from 'rxjs/operators';
+import { takeUntil, filter, tap, take } from 'rxjs/operators';
 
 import { Store, select } from '@ngrx/store';
 
-import { EditedUserPayload } from '@core/interfaces';
-import { GetUser, GetUsers, UpdateSelectedUser, PatchEditedUser } from '@store/actions';
-import { selectUserList, selectEditedUser } from '@store/selectos';
+import { UsersService } from '@app/users/services';
+
+import { EditedUserPayload, EditedUser } from '@core/interfaces';
+import { GetUser, UpdateSelectedUser, PatchEditedUser } from '@store/actions';
+import { selectEditedUser } from '@store/selectos';
 import { IAppState } from '@store/state';
 import { UserModel } from '@app/users/models';
 
@@ -19,6 +21,7 @@ import { UserModel } from '@app/users/models';
   selector: 'app-user-edit',
   templateUrl: 'user-edit.component.html',
   styleUrls: ['./user-edit.component.scss'],
+  providers: [UsersService]
 })
 
 export class UserEditComponent implements OnInit, OnDestroy{
@@ -26,72 +29,73 @@ export class UserEditComponent implements OnInit, OnDestroy{
   public formList;
   public initialData: UserModel;
 
-  private _destroyed$ = new Subject<void>();
+  private _destroy$ = new Subject<void>();
 
   public constructor(
     private readonly _router: Router,
     private readonly _snackBar: MatSnackBar,
-    private readonly _route: ActivatedRoute,
+    private readonly _activatedRoute: ActivatedRoute,
     private readonly _store: Store<IAppState>,
+    private readonly _usersService: UsersService,
   ) {}
 
   public ngOnInit(): void {
-    //  snapshot
-    this._route.paramMap
-      .subscribe(params => {
-        this._getUser(+params.get('id'));
-      })
+    this._getUser(+this._activatedRoute.snapshot.params.id);
   }
 
   public ngOnDestroy(): void {
     this._destroy();
-    if (confirm('Save data?')) {
-      this._patchEditedUser({source: 'state'});
-    } else {
-      this._patchEditedUser({data: null, source: 'state'});
-    }
+
+    this._store
+      .pipe(
+        take(1),
+        select(selectEditedUser),
+      )
+      .subscribe({
+        next: (editedUser: EditedUser) => {
+          if (editedUser.source !== 'state') {
+            if (confirm('Save data?')) {
+              this._patchEditedUser({source: 'state'});
+            } else {
+              this._patchEditedUser({data: null, source: 'state'});
+            }
+          }
+        },
+        error: () => {},
+        complete: () => {},
+      })
   }
   
   public onSubmit(user: UserModel): void {
     this._destroy();
-    this._store.dispatch(new UpdateSelectedUser(user));
+    const newUser = this._getUserWithId(user);
+    this._store.dispatch(new UpdateSelectedUser(newUser));
     this._router.navigate(['/users']);
     this._openSnackBar('User changed', 'Ok');
+  }
+  
+  public onPacthUser(userPayload: EditedUser): void {
+    const data = this._getUserWithId(userPayload.data);
+    this._patchEditedUser({data, source: userPayload.source});
+  }
+
+  public onChangeTab(event) {
+    this._usersService.changeTabEvent.emit(event.index);
   }
 
   private _getUser(id: number): void {
     this._store
       .pipe(
         select(selectEditedUser),
-        takeUntil(this._destroyed$),
+        takeUntil(this._destroy$),
         filter(editedUser => !editedUser || !editedUser.data || editedUser.data.id !== id)
       )
       .subscribe({
-        next: (data: any) => {
-          this._fetchUser(id);
+        next: () => {
+          this._store.dispatch(new GetUser(id));
         },
         error: () => {},
         complete: () => {},
-      })
-  }
-
-  //  make async action
-  private _fetchUser(id: number): void {
-    this._store
-      .pipe(
-        select(selectUserList),
-        takeUntil(this._destroyed$)
-      )
-      .subscribe({
-        next: (data) => {
-          if (!data) {
-            this._store.dispatch(new GetUsers());
-          } else {
-            this._store.dispatch(new GetUser(id));
-          }
-        },
-        error: () => {},
-        complete: () => {}
       })
   }
 
@@ -105,8 +109,13 @@ export class UserEditComponent implements OnInit, OnDestroy{
     });
   }
 
+  private _getUserWithId(user: UserModel): UserModel {
+    const id = +this._activatedRoute.snapshot.params.id;
+    return {...user, ...{id}};
+  }
+
   private _destroy(): void {
-    this._destroyed$.next();
-    this._destroyed$.complete();
+    this._destroy$.next();
+    this._destroy$.complete();
   }
 }

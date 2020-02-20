@@ -211,11 +211,7 @@ export class TableFilterComponent implements OnInit {
   private _initFiltres(): void {
     const {usersId, phone, state, dateStart, dateEnd} = this._route.snapshot.queryParams;
 
-    this.filtersForm.patchValue({
-      phone,
-    }, {
-      emitEvent: false,
-    });
+    this.filtersForm.patchValue(phone, { emitEvent: false });
     this.filtersForm.patchValue({
       dateStart,
       dateEnd

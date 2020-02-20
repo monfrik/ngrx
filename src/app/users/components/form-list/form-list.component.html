@@ -1,5 +1,5 @@
 <div class="form-list">
-  <form [formGroup]="formGroup" class="form-list-form">
+  <form [formGroup]="formGroup" class="form-list-form" (ngSubmit)="submit()">
 
     <mat-form-field>
       <input
@@ -226,7 +226,7 @@
         class="form-list-link"
       >Go to table</a> 
       <button mat-button (click)="formGroup.reset()" type="button">Clear</button>
-      <button mat-button (click)="submit()" type="submit">Save</button>
+      <button mat-button type="submit">Save</button>
     </div>
   </form>
 </div>

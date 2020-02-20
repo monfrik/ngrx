@@ -2,27 +2,21 @@ import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Subject } from 'rxjs';
-import { takeUntil, filter, map, tap } from 'rxjs/operators';
+import { takeUntil, filter, tap } from 'rxjs/operators';
+
+import { Store, select } from '@ngrx/store';
 
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 
-import { UserModel } from '../../models/user.model';
+import { GetUsers } from '@store/actions';
+import { IAppState } from '@store/state';
+import { selectUserList } from '@store/selectos';
+import { RouterParams } from '@core/interfaces';
 import { convertDate } from '@app/utils';
-import { Store, select } from '@ngrx/store';
-import { IAppState } from '@app/store/state';
-import { GetUsers } from '@app/store/actions';
-import { selectUserList } from '@app/store/selectos';
+import { UserModel } from '@app/users/models';
 
-
-interface RouterParams {
-  usersId?: number[] | string[];
-  phone?: string;
-  state?: string;
-  dateStart?: string | Date;
-  dateEnd?: string | Date;
-}
 
 
 @Component({
@@ -61,7 +55,7 @@ export class UsersTableComponent implements OnInit, OnDestroy {
 
   public constructor(
     private readonly _router: Router,
-    private readonly _route: ActivatedRoute,
+    private readonly _activatedRoute: ActivatedRoute,
     private readonly _store: Store<IAppState>,
   ) {}
 
@@ -93,8 +87,8 @@ export class UsersTableComponent implements OnInit, OnDestroy {
               filter(data => !!data)
             )
             .subscribe((users) => {
-            this.filtredTable.data = users.filter(el => this._filterTable(el, filtres));
-          })
+              this.filtredTable.data = users.filter(el => this._filterTable(el, filtres));
+            })
         }
       })
   }
@@ -165,11 +159,11 @@ export class UsersTableComponent implements OnInit, OnDestroy {
   }
 
   private _initFiltres(): void {
-    const usersId = this._route.snapshot.queryParams.usersId || [];
-    const phone = this._route.snapshot.queryParams.phone || '';
-    const state = this._route.snapshot.queryParams.state || '';
-    const dateStart = this._route.snapshot.queryParams.dateStart || '';
-    const dateEnd = this._route.snapshot.queryParams.dateEnd || '';
+    const usersId = this._activatedRoute.snapshot.queryParams.usersId || [];
+    const phone = this._activatedRoute.snapshot.queryParams.phone || '';
+    const state = this._activatedRoute.snapshot.queryParams.state || '';
+    const dateStart = this._activatedRoute.snapshot.queryParams.dateStart || '';
+    const dateEnd = this._activatedRoute.snapshot.queryParams.dateEnd || '';
     
     this._filter$.next({
       usersId,
