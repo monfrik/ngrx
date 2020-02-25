@@ -10,7 +10,6 @@ export const userReducers = (
   switch (action.type) {
 
     case UserAction.FetchUsers: {
-      console.log('fetch');
       const users = routerFilter(action.payload.users || [], action.payload.filtres);
       return {
         ...state,

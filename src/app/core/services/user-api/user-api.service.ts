@@ -24,12 +24,10 @@ export class UserApiService {
   ) {}
 
   public getUsers(): Observable<UserModel[]> {
-    console.log('getUsers')
     return this._http
     .get<UserModel[]>(USERS_URL)
     .pipe(
       map((users: any) => {
-        console.log('getUsers users', users)
           if (!users) {
             return [];
           }

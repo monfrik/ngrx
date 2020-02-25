@@ -3,8 +3,8 @@ import { Injectable } from '@angular/core';
 import { Effect, ofType, Actions } from '@ngrx/effects';
 import { Store, select } from '@ngrx/store';
 
-import { of, concat } from 'rxjs';
-import { switchMap, map, withLatestFrom, tap, concatMap } from 'rxjs/operators';
+import { of, concat, NEVER } from 'rxjs';
+import { switchMap, map, withLatestFrom, tap, concatMap, mergeMap, merge } from 'rxjs/operators';
 
 import { IAppState } from '../state';
 import {
@@ -42,17 +42,13 @@ export class UserEffects {
   @Effect()
   public getUsers$ = this._actions$.pipe(
     ofType<GetUsers>(UserAction.GetUsers),
-    // tap(console.log),
     map((action) => action.payload),
-    tap(console.log),
-    withLatestFrom(this._usersService.getUsers()),
-    // switchMap(() => this._usersService.getUsers()),
-    tap(console.log),
-    // withLatestFrom(of({})),
-    // tap(console.log),
-
-
-    // map(([filtres, users]) => new FetchUsers({users, filtres: filtres as RouterParams})),
+    mergeMap((filtres: RouterParams) => this._usersService.getUsers()
+      .pipe(
+        map(users => ({ filtres, users })),
+      )
+    ),
+    map((data) => new FetchUsers(data)),
   )
 
   @Effect()

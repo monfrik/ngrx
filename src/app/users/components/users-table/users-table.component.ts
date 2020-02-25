@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Subject, Observable } from 'rxjs';
-import { takeUntil, filter, tap } from 'rxjs/operators';
+import { takeUntil, filter, tap, take } from 'rxjs/operators';
 
 import { Store, select } from '@ngrx/store';
 
@@ -91,7 +91,6 @@ export class UsersTableComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (filtres: RouterParams) => {
           const queryParams = this._getRouterParams(filtres);
-          // console.log(queryParams)
           this._router.navigate(['/users'], { queryParams });
           this._store.dispatch(new GetUsers(queryParams))
         }
@@ -103,8 +102,7 @@ export class UsersTableComponent implements OnInit, OnDestroy {
       .pipe(
         tap((data: UserModel[]) => {
           if (data === null) {
-            this._filter$.next({});
-            // this._store.dispatch(new GetUsers({}));
+            this._initFiltres();
           }
         }),
         filter((data: UserModel[]) => !!data),
@@ -121,36 +119,6 @@ export class UsersTableComponent implements OnInit, OnDestroy {
       })
   }
 
-  // private _filterTable(data: UserModel, filter): boolean {
-  //   let condition = true;
-  //   if (filter.usersId.length) {
-  //     condition = condition && filter.usersId.includes(data.id);
-  //   }
-
-  //   if (filter.phone) {
-  //     const userPhone = data.phone.replace(/[^\d]/, '');
-  //     condition = condition && userPhone.includes(filter.phone);
-  //   }
-
-  //   if (filter.state) {
-  //     condition = condition && filter.state === data.address.state.shortname;
-  //   }
-
-  //   if (filter.dateStart || filter.dateEnd) {
-  //     const birthday = data.birthday.toISOString().slice(0,10);
-
-  //     if (filter.dateStart) {
-  //       condition = condition && convertDate(filter.dateStart) <= birthday;
-  //     }
-
-  //     if (filter.dateEnd) {
-  //       condition = condition && convertDate(filter.dateEnd) >= birthday;
-  //     }
-  //   }
-
-  //   return condition;
-  // }
-
   private _getRouterParams(filtres: RouterParams): RouterParams {
     let routerParams: RouterParams = {};
 
@@ -163,20 +131,20 @@ export class UsersTableComponent implements OnInit, OnDestroy {
     return routerParams;
   }
 
-  // private _initFiltres(): void {
-  //   const usersId = this._activatedRoute.snapshot.queryParams.usersId || [];
-  //   const phone = this._activatedRoute.snapshot.queryParams.phone || '';
-  //   const state = this._activatedRoute.snapshot.queryParams.state || '';
-  //   const dateStart = this._activatedRoute.snapshot.queryParams.dateStart || '';
-  //   const dateEnd = this._activatedRoute.snapshot.queryParams.dateEnd || '';
+  private _initFiltres(): void {
+    const usersId = this._activatedRoute.snapshot.queryParams.usersId || [];
+    const phone = this._activatedRoute.snapshot.queryParams.phone || '';
+    const state = this._activatedRoute.snapshot.queryParams.state || '';
+    const dateStart = this._activatedRoute.snapshot.queryParams.dateStart || '';
+    const dateEnd = this._activatedRoute.snapshot.queryParams.dateEnd || '';
     
-  //   this._filter$.next({
-  //     usersId,
-  //     phone,
-  //     state,
-  //     dateStart,
-  //     dateEnd,
-  //   });
-  // }
+    this._filter$.next({
+      usersId,
+      phone,
+      state,
+      dateStart,
+      dateEnd,
+    });
+  }
 
 }
