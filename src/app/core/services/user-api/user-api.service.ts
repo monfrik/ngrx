@@ -24,10 +24,12 @@ export class UserApiService {
   ) {}
 
   public getUsers(): Observable<UserModel[]> {
+    console.log('getUsers')
     return this._http
-      .get<UserModel[]>(USERS_URL)
-      .pipe(
-        map((users: any) => {
+    .get<UserModel[]>(USERS_URL)
+    .pipe(
+      map((users: any) => {
+        console.log('getUsers users', users)
           if (!users) {
             return [];
           }
@@ -52,7 +54,6 @@ export class UserApiService {
   }
 
   public updateUser(user: UserModel): Observable<UserModel> {
-    console.log('updateUser user = ', user)
     return this._http
       .put<UserModel>(USERS_URL, user, HTTP_OPTIONS);
   }

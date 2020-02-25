@@ -11,8 +11,11 @@ import { Validators, FormBuilder, FormGroup, AbstractControl } from '@angular/fo
 import { FileUploadValidators } from '@iplab/ngx-file-upload';
 
 import { Subject } from 'rxjs';
-import { filter, takeUntil, map } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
+
 import { Store, select } from '@ngrx/store';
+
+import { MatSnackBar } from '@angular/material';
 
 import { UsersService } from '@app/users/services';
 
@@ -27,17 +30,10 @@ import {
   STATE_SHORT_PATTERN,
 } from '@app/utils';
 
-import { PatchEditedUser } from '@store/actions';
 import { selectEditedUser } from '@store/selectos';
 import { IAppState } from '@store/state';
 import { UserModel } from '@app/users/models';
 import { FormStepperData } from './interfaces';
-import {
-  EditedUser,
-  EditedUserPayload,
-  UserEditSource
-} from '@core/interfaces';
-
 
 @Component({
   selector: 'app-form-stepper',
@@ -52,7 +48,7 @@ export class FormStepperComponent implements OnInit, OnDestroy {
   public submitStepper = new EventEmitter<UserModel>();
 
   @Output()
-  public patchUser = new EventEmitter<EditedUserPayload>();
+  public patchFormStepper = new EventEmitter<UserModel>();
   
   public editedUser$ = this._store.pipe(select(selectEditedUser));
 
@@ -62,19 +58,21 @@ export class FormStepperComponent implements OnInit, OnDestroy {
   public thirdFormGroup: FormGroup;
 
   private _destroy$ = new Subject<void>();
-  private _source: UserEditSource = 'stepper';
   private _submited = false;
+  private _formChanged = false;
 
   public constructor(
     private readonly _formBuilder: FormBuilder,
     private readonly _store: Store<IAppState>,
     private readonly _usersService: UsersService,
+    private readonly _snackBar: MatSnackBar,
   ) {}
 
   public ngOnInit(): void {
     this._changeTabSubscribe();
     this._formInitialization();
     this._getValueChanges();
+    this._formSubscribe();
   }
 
   public ngOnDestroy(): void {
@@ -84,19 +82,22 @@ export class FormStepperComponent implements OnInit, OnDestroy {
 
   public submit(): void {
     if (this.formGroup.valid) {
-      this._submited = true;
-      this._destroy();
-      const newUser = this._convertToModel(this.formGroup.value);
-      this.submitStepper.emit(newUser);
+      if (this._formChanged) {
+        this._submited = true;
+        this._formChanged = false;
+        this._destroy();
+        const newUser = this._convertToModel(this.formGroup.value);
+        this.submitStepper.emit(newUser);
+      } else {
+        this._openSnackBar('Nothing to update', 'Ok');
+      }
     }
   }
 
   private _patchUser(): void {
-    if (this.formGroup.touched && !this._submited) {
-      this.patchUser.emit({
-        data: this._convertToModel(this.formGroup.value),
-        source: this._source,
-      });
+    if (this.formGroup.touched && !this._submited && this._formChanged) {
+      this._formChanged = false;
+      this.patchFormStepper.emit(this._convertToModel(this.formGroup.value));
     }
   }
 
@@ -104,14 +105,12 @@ export class FormStepperComponent implements OnInit, OnDestroy {
     this.editedUser$
       .pipe(
         takeUntil(this._destroy$),
-        filter((editedUser: EditedUser) => {
-          return !!editedUser && !!editedUser.data && editedUser.source !== this._source;
-        }),
-        map((editedUser: EditedUser) => editedUser.data),
+        filter((editedUser: UserModel) => !!editedUser),
       )
       .subscribe({
         next: (user: UserModel) => {
           this._formUpdate(user);
+          this._formChanged = false;
         },
         error: () => {},
         complete: () => {},
@@ -141,7 +140,6 @@ export class FormStepperComponent implements OnInit, OnDestroy {
   private _formUpdate(data: UserModel): void {
     this.formGroup.patchValue({
       firstFormGroup: {
-        id: data.id,
         firstname: data.firstname,
         lastname: data.lastname,
         phone: data.phone,
@@ -195,14 +193,39 @@ export class FormStepperComponent implements OnInit, OnDestroy {
   }
 
   private _changeTabSubscribe(): void {
-    this._usersService.changeTabEvent.subscribe({
-      next: (tabIndex: number) => {
-        if (tabIndex !== 0) {
-          this._patchUser();
-        }
-      },
-      error: () => {},
-      complete: () => {},
+    this._usersService.changeTabEvent
+      .pipe(
+        takeUntil(this._destroy$),
+      )
+      .subscribe({
+        next: (tabName: string) => {
+          if (tabName !== 'stepper') {
+            this._patchUser();
+          }
+        },
+        error: () => {},
+        complete: () => {},
+      });
+  }
+
+  private _formSubscribe(): void {
+    this.formGroup.valueChanges
+      .pipe(
+        takeUntil(this._destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this._formChanged = true;
+        },
+        error: () => {},
+        complete: () => {},
+      });
+  }
+
+  private _openSnackBar(message: string, action: string): void {
+    this._snackBar.open(message, action, {
+      duration: 1000,
     });
   }
+
 }

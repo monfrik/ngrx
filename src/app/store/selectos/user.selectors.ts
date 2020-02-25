@@ -11,9 +11,9 @@ export const selectUserList = createSelector(
   (state: IUserState) => state.users
 );
 
-export const selectSelectedUser = createSelector(
+export const selectFilteredUsers = createSelector(
   selectUsers,
-  (state: IUserState) => state.selectedUser
+  (state: IUserState) => state.filteredUsers
 );
 
 export const selectEditedUser = createSelector(

@@ -4,8 +4,8 @@ import { Injectable, EventEmitter } from '@angular/core';
 export class UsersService {
 
   /**
-   * event value - index of tab
+   * event value - name of tab
    */
-  public changeTabEvent = new EventEmitter<number>();
+  public changeTabEvent = new EventEmitter<string>();
 
 }

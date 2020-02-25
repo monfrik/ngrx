@@ -21,6 +21,8 @@ import { FileUploadValidators } from '@iplab/ngx-file-upload';
 
 import { Store, select } from '@ngrx/store';
 
+import { MatSnackBar } from '@angular/material';
+
 import { UsersService } from '@app/users/services';
 
 import {
@@ -38,16 +40,9 @@ import {
   STATES,
 } from '@app/utils';
 
-import { PatchEditedUser } from '@store/actions';
 import { selectEditedUser } from '@store/selectos';
 import { IAppState } from '@store/state';
 import { UserModel } from '@app/users/models';
-
-import {
-  EditedUser,
-  EditedUserPayload,
-  UserEditSource
-} from '@core/interfaces';
 
 
 @Component({
@@ -64,7 +59,7 @@ export class FormListComponent implements OnInit, OnDestroy {
   public submitList = new EventEmitter<UserModel>();
 
   @Output()
-  public patchUser = new EventEmitter<EditedUserPayload>();
+  public patchFormList = new EventEmitter<UserModel>();
 
   public editedUser$ = this._store.pipe(select(selectEditedUser));
 
@@ -75,13 +70,14 @@ export class FormListComponent implements OnInit, OnDestroy {
   public formGroup: FormGroup;
 
   private _destroy$ = new Subject<void>();
-  private _source: UserEditSource = 'list';
   private _submited = false;
+  private _formChanged = false;
   
   public constructor(
     private readonly _formBuilder: FormBuilder,
     private readonly _store: Store<IAppState>,
     private readonly _usersService: UsersService,
+    private readonly _snackBar: MatSnackBar,
   ) {}
 
   public get address(): AbstractControl {
@@ -96,6 +92,7 @@ export class FormListComponent implements OnInit, OnDestroy {
     this._changeTabSubscribe();
     this._formInitialization();
     this._getValueChanges();
+    this._formSubscribe();
   }
 
   public ngOnDestroy(): void {
@@ -105,9 +102,14 @@ export class FormListComponent implements OnInit, OnDestroy {
 
   public submit(): void {
     if (this.formGroup.valid) {
-      this._submited = true;
-      this._destroy();
-      this.submitList.emit(new UserModel(this.formGroup.value));
+      if (this._formChanged) {
+        this._formChanged = false;
+        this._submited = true;
+        this._destroy();
+        this.submitList.emit(new UserModel(this.formGroup.value));
+      } else {
+        this._openSnackBar('Nothing to update', 'Ok');
+      }
     }
   }
 
@@ -117,11 +119,9 @@ export class FormListComponent implements OnInit, OnDestroy {
   }
 
   private _patchUser(): void {
-    if (this.formGroup.touched && !this._submited) {
-      this.patchUser.emit({
-        data: new UserModel(this.formGroup.value),
-        source: this._source,
-      });
+    if (this.formGroup.touched && !this._submited && this._formChanged) {
+      this._formChanged = false;
+      this.patchFormList.emit(new UserModel(this.formGroup.value));
     }
   }
 
@@ -129,16 +129,12 @@ export class FormListComponent implements OnInit, OnDestroy {
     this.editedUser$
       .pipe(
         takeUntil(this._destroy$),
-        filter((editedUser: EditedUser) => {
-          return !!editedUser && !!editedUser.data && editedUser.source !== this._source;
-        }),
-        map((editedUser: EditedUser) => editedUser.data),
+        filter((editedUser: UserModel) => !!editedUser),
       )
       .subscribe({
-        next: (user: UserModel) => {
-          this.formGroup.patchValue(user, {
-            emitEvent: false,
-          });
+        next: (editedUser: UserModel) => {
+          this.formGroup.patchValue(editedUser);
+          this._formChanged = false;
         },
         error: () => {},
         complete: () => {},
@@ -172,23 +168,46 @@ export class FormListComponent implements OnInit, OnDestroy {
   }
 
   private _changeTabSubscribe(): void {
-    this._usersService.changeTabEvent.subscribe({
-      next: (tabIndex: number) => {
-        if (tabIndex !== 0) {
-          this._patchUser();
-        }
-      },
-      error: () => {},
-      complete: () => {},
+    this._usersService.changeTabEvent
+      .pipe(
+        takeUntil(this._destroy$),
+      )
+      .subscribe({
+        next: (tabName: string) => {
+          if (tabName !== 'list') {
+            this._patchUser();
+          }
+        },
+        error: () => {},
+        complete: () => {},
+      });
+  }
+
+  private _formSubscribe(): void {
+    this.formGroup.valueChanges
+      .pipe(
+        takeUntil(this._destroy$),
+      )
+      .subscribe({
+        next: () => {
+          this._formChanged = true;
+        },
+        error: () => {},
+        complete: () => {},
+      });
+  }
+
+  private _openSnackBar(message: string, action: string): void {
+    this._snackBar.open(message, action, {
+      duration: 1000,
     });
   }
 
 }
 /*
-- Избавиться от source
-- выпилить selectedUser
-- 
-- если нет выбранного пользователя в списке, то брать с бекенда
++ Избавиться от source
++ выпилить selectedUser 
++ если нет выбранного пользователя в списке, то брать с бекенда
 - на userTable получать сразу отфильтрованные данные (отправлять параметры в сторе через экшен. Фильтровать в редьюсере)
 - создать новую ветку store entities (@ngrx/data)
 */

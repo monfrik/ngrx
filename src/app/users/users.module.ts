@@ -34,6 +34,7 @@ import {
 } from './components'; 
 
 import { ErrorFiledComponent } from '@core/components';
+import { TabDirective } from './directives';
 
 @NgModule({
   imports: [
@@ -67,6 +68,7 @@ import { ErrorFiledComponent } from '@core/components';
     ThirdStepComponent,
     TableFilterComponent,
     ErrorFiledComponent,
+    TabDirective,
   ],
   // providers: [MatDatepickerModule]
 })

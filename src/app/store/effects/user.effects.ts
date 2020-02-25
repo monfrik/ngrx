@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
+
 import { Effect, ofType, Actions } from '@ngrx/effects';
 import { Store, select } from '@ngrx/store';
-import { switchMap, map, withLatestFrom, tap } from 'rxjs/operators';
+
+import { of, concat } from 'rxjs';
+import { switchMap, map, withLatestFrom, tap, concatMap } from 'rxjs/operators';
 
 import { IAppState } from '../state';
 import {
@@ -10,13 +13,14 @@ import {
   FetchUsers,
   GetUser,
   FetchUser,
-  UpdateSelectedUser,
-  SaveSelectedUser
+  UpdateEditedUser,
+  SaveEditedUser
 } from '../actions';
 import { selectUserList } from '../selectos';
 
 import { UserApiService } from '@core/services';
 import { UserModel } from '@app/users/models';
+import { RouterParams } from '@app/core/interfaces';
 
 
 @Injectable()
@@ -25,24 +29,39 @@ export class UserEffects {
   public getUser$ = this._actions$.pipe(
     ofType<GetUser>(UserAction.GetUser),
     map((action) => action.payload),
-    switchMap((id: number) => this._usersService.getUser(id)),
+    withLatestFrom(this._store.pipe(select(selectUserList))),
+    switchMap(([id, users]) => {
+      if (users) {
+        return of(users.find(user => user.id == id));
+      }
+      return this._usersService.getUser(id);
+    }),
     map((user: UserModel) => new FetchUser(user)),
   );
 
   @Effect()
   public getUsers$ = this._actions$.pipe(
     ofType<GetUsers>(UserAction.GetUsers),
-    switchMap(() => this._usersService.getUsers()),
-    map((users: UserModel[]) => new FetchUsers(users)),
+    // tap(console.log),
+    map((action) => action.payload),
+    tap(console.log),
+    withLatestFrom(this._usersService.getUsers()),
+    // switchMap(() => this._usersService.getUsers()),
+    tap(console.log),
+    // withLatestFrom(of({})),
+    // tap(console.log),
+
+
+    // map(([filtres, users]) => new FetchUsers({users, filtres: filtres as RouterParams})),
   )
 
   @Effect()
-  public updateSelectedUser$ = this._actions$.pipe(
-    ofType<UpdateSelectedUser>(UserAction.UpdateSelectedUser),
+  public UpdateEditedUser$ = this._actions$.pipe(
+    ofType<UpdateEditedUser>(UserAction.UpdateEditedUser),
     map((action) => action.payload),
     switchMap((user: UserModel) => this._usersService.updateUser(user)),
-    tap(() => this._store.dispatch(new GetUsers())),
-    map(()=> new SaveSelectedUser()),
+    tap(() => this._store.dispatch(new GetUsers({}))),
+    map(()=> new SaveEditedUser()),
   )
 
   constructor (

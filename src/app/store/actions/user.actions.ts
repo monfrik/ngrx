@@ -1,7 +1,7 @@
 import { Action } from '@ngrx/store';
 
 import { UserModel } from '@app/users/models';
-import { EditedUserPayload } from '@core/interfaces';
+import { RouterParams } from '@app/core/interfaces';
 
 export enum UserAction {
   GetUsers = '[User] Get Users',
@@ -10,18 +10,21 @@ export enum UserAction {
   FetchUser = '[User] Get User Success',
   GetEditedUser = '[User] Get Edited User',
   PatchEditedUser = '[User] Patch Edited User',
-  UpdateSelectedUser = '[User] Update Selected User',
-  SaveSelectedUser = '[User] Update Selected User Success',
+  UpdateEditedUser = '[User] Update Edited User',
+  SaveEditedUser = '[User] Save Edited User',
+  ClearEditedUser = '[User] Clear Edited User',
 }
 
 export class GetUsers implements Action {
   public readonly type = UserAction.GetUsers;
+
+  constructor (public payload: RouterParams){}
 }
 
 export class FetchUsers implements Action {
   public readonly type = UserAction.FetchUsers;
 
-  constructor (public payload: UserModel[]){}
+  constructor (public payload: {users: UserModel[], filtres: RouterParams}){}
 }
 
 export class GetUser implements Action {
@@ -43,24 +46,30 @@ export class GetEditedUser implements Action {
 export class PatchEditedUser implements Action {
   public readonly type = UserAction.PatchEditedUser;
 
-  constructor (public payload: EditedUserPayload){}
+  constructor (public payload: UserModel){}
 }
 
-export class UpdateSelectedUser implements Action {
-  public readonly type = UserAction.UpdateSelectedUser;
+export class UpdateEditedUser implements Action {
+  public readonly type = UserAction.UpdateEditedUser;
 
   constructor (public payload: UserModel){}
 }
 
-export class SaveSelectedUser implements Action {
-  public readonly type = UserAction.SaveSelectedUser;
+export class SaveEditedUser implements Action {
+  public readonly type = UserAction.SaveEditedUser;
 }
 
-export type UserActionList = GetUsers 
+export class ClearEditedUser implements Action {
+  public readonly type = UserAction.ClearEditedUser;
+}
+
+export type UserActionList =
+GetUsers
 | FetchUsers
-| GetUser 
-| FetchUser 
+| GetUser
+| FetchUser
 | GetEditedUser
 | PatchEditedUser
-| UpdateSelectedUser
-| SaveSelectedUser;
+| UpdateEditedUser
+| ClearEditedUser
+| SaveEditedUser;

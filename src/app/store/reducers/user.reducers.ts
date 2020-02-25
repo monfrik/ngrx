@@ -1,5 +1,6 @@
 import { UserAction, UserActionList } from '../actions';
 import { initialUserState, IUserState } from '../state';
+import { routerFilter } from '../helpers';
 import { UserModel } from '@app/users/models';
 
 export const userReducers = (
@@ -7,60 +8,53 @@ export const userReducers = (
   action: UserActionList,
 ): IUserState => {
   switch (action.type) {
+
     case UserAction.FetchUsers: {
+      console.log('fetch');
+      const users = routerFilter(action.payload.users || [], action.payload.filtres);
       return {
         ...state,
-        users: action.payload,
+        users,
       };
     }
-    
     case UserAction.FetchUser: {
       return {
         ...state,
-        selectedUser: action.payload,
-        editedUser: {
-          data: action.payload,
-          source: 'state'
-        }
+        editedUser: action.payload,
       }
     }
 
     case UserAction.PatchEditedUser: {
       let editedUser: UserModel;
 
-      if (action.payload.data === null) {
+      if (action.payload === null) {
         editedUser = null
       }
 
-      if (action.payload.data === undefined) {
-        if (state.editedUser.data) {
-          editedUser = {...state.editedUser.data};
-        } else {
-          editedUser = null;
-        }
-      }
-
-      if (action.payload.data) {
+      if (action.payload) {
         editedUser = {
-          ...state.editedUser.data,
-          ...action.payload.data
+          ...state.editedUser,
+          ...action.payload
         }
       }
       
       return {
         ...state,
-        editedUser: {
-          data: editedUser,
-          source: action.payload.source
-        },
+        editedUser,
       }
     }
 
-    case UserAction.SaveSelectedUser: {
+    case UserAction.SaveEditedUser: {
       return {
         ...state,
-        editedUser: {data: null, source: 'state'},
-        selectedUser: null,
+        editedUser: null,
+      }
+    }
+
+    case UserAction.ClearEditedUser: {
+      return {
+        ...state,
+        editedUser: null,
       }
     }
 
