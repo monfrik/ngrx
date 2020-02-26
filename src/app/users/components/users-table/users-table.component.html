@@ -6,7 +6,7 @@
 
   <app-table-filter
     *ngIf="filtredTable?.data !== null"
-    [data]="filtredTable?.data"
+    [users]="filtredTable?.data"
     (applyFilter)="onApllyFilter($event)"
   ></app-table-filter>
 

@@ -4,11 +4,10 @@
 
     <mat-chip-list #chipList>
       <mat-chip
-        *ngFor="let user of users"
+        *ngFor="let user of selectedUsers"
         [selectable]="true"
         [removable]="true"
-        (removed)="remove(user)"
-      >
+        (removed)="remove(user)">
         {{user?.firstname}}
         <mat-icon matChipRemove>cancel</mat-icon>
       </mat-chip>
@@ -33,9 +32,9 @@
 
     <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
       <mat-option
-        *ngFor="let user of filteredUsers | async"
+        *ngFor="let user of filteredUsers"
         [value]="user.id"
-        [disabled]="users.includes(user)"
+        [disabled]="selectedUsers.includes(user)"
       >
         {{user.firstname + ' ' + user.lastname}}
       </mat-option>
@@ -54,7 +53,7 @@
     <mat-error
       [inputControl]="filtersForm.get('phone')"
       [errorMessages]="{
-        'required': 'this control is required',
+        'required': 'This control is required',
         'pattern': 'Invalid phone'
       }"
       error-filed
@@ -111,7 +110,7 @@
       [color]="submitColor"
       type="submit"
       class="table-filter-action table-filter-action--search"
-    >Search with filtres</button>
+    >Filter</button>
     <button
       mat-raised-button
       type="button"

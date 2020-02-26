@@ -27,8 +27,6 @@ import { UserModel } from '@app/users/models';
 
 export class UsersTableComponent implements OnInit, OnDestroy {
   
-  public users$: Observable<UserModel[]>;
-
   public filtredTable: MatTableDataSource<any>;
   public displayedColumns: string[] = [
     'position',
@@ -61,9 +59,11 @@ export class UsersTableComponent implements OnInit, OnDestroy {
   ) {}
 
   public ngOnInit(): void {
-    this._initStoreSubsribe();
     this._subscribeFilter();
     this._getUsers();
+    this._activatedRoute.queryParams.subscribe((queryParams: any): void => {
+      this._store.dispatch(new GetUsers(queryParams));
+    })
   }
 
   public ngOnDestroy(): void {
@@ -75,14 +75,6 @@ export class UsersTableComponent implements OnInit, OnDestroy {
     this._filter$.next(filtres);
   }
 
-  private _initStoreSubsribe(): void {
-    this.users$ = this._store
-      .pipe(
-        takeUntil(this._destroyed$),
-        select(selectUserList),
-      );
-  }
-
   private _subscribeFilter(): void {
     this._filter$
       .pipe(
@@ -92,14 +84,15 @@ export class UsersTableComponent implements OnInit, OnDestroy {
         next: (filtres: RouterParams) => {
           const queryParams = this._getRouterParams(filtres);
           this._router.navigate(['/users'], { queryParams });
-          this._store.dispatch(new GetUsers(queryParams))
         }
       })
   }
 
   private _getUsers(): void {
-    this.users$
+    this._store
       .pipe(
+        takeUntil(this._destroyed$),
+        select(selectUserList),
         tap((data: UserModel[]) => {
           if (data === null) {
             this._initFiltres();
@@ -122,13 +115,23 @@ export class UsersTableComponent implements OnInit, OnDestroy {
   private _getRouterParams(filtres: RouterParams): RouterParams {
     let routerParams: RouterParams = {};
 
-    if (filtres.usersId && filtres.usersId.length) routerParams.usersId = filtres.usersId;
-    if (filtres.phone) routerParams.phone = filtres.phone;
-    if (filtres.state) routerParams.state = filtres.state;
-    if (filtres.dateStart) routerParams.dateStart = convertDate(filtres.dateStart);
-    if (filtres.dateEnd) routerParams.dateEnd = convertDate(filtres.dateEnd);
+    if (filtres.usersId && filtres.usersId.length) {
+      routerParams.usersId = filtres.usersId;
+    }
+    if (filtres.phone) {
+      routerParams.phone = filtres.phone;
+    }
+    if (filtres.state) {
+      routerParams.state = filtres.state;
+    }
+    if (filtres.dateStart) {
+      routerParams.dateStart = convertDate(filtres.dateStart);
+    }
+    if (filtres.dateEnd) {
+      routerParams.dateEnd = convertDate(filtres.dateEnd);
+    }
 
-    return routerParams;
+    return filtres;
   }
 
   private _initFiltres(): void {

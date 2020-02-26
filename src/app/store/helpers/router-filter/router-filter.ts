@@ -19,6 +19,7 @@ export function routerFilter (data: UserModel[], filter: RouterParams) {
     }
 
     if (filter.dateStart || filter.dateEnd) {
+      debugger;
       const birthday = element.birthday.toISOString().slice(0,10);
 
       if (filter.dateStart) {
